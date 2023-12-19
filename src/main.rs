@@ -4,7 +4,7 @@ use safe_drive::{
     error::DynError,
     logger::Logger,
     pr_info,
-    msg::common_interfaces::nav_msgs,
+    msg::{common_interfaces::nav_msgs, RosString},
 };
 
 use imu_localization::*;
@@ -18,11 +18,14 @@ fn main()->Result<(), DynError>
 
     let subscriber = node.create_subscriber::<haya_imu_msgs::msg::ImuData>("/imu_data", None)?;
     let publisher = node.create_publisher::<nav_msgs::msg::Odometry>("/odom", None)?;
+    let mut send_msg = nav_msgs::msg::Odometry::new().unwrap();
+    send_msg.header.frame_id = RosString::new("map").unwrap();
+    send_msg.child_frame_id = RosString::new("odom").unwrap();
 
     let delta_time = 0.01;
 
     let mut pos = init_posture();
-    let mut obs = init_posture();
+    let obs = init_posture();
     let mut disp = init_cov();
     let q = predict_noise(0.01);
     let r = observation_noise(0.1);
@@ -48,6 +51,19 @@ fn main()->Result<(), DynError>
 
         pos = update_posture(predict_posture, kalman_gain, obs_jacob, obs_posture);
         disp = update_disp(kalman_gain, obs_jacob, predict_disp);
+
+        let quat = euler_to_quaternion(pos);
+
+        send_msg.pose.pose.orientation.x = quat.x;
+        send_msg.pose.pose.orientation.y = quat.y;
+        send_msg.pose.pose.orientation.z = quat.z;
+        send_msg.pose.pose.orientation.w = quat.w;
+
+        let _ = publisher.send(&send_msg);
     })
     );
+
+    loop {
+        selector.wait()?;
+    }
 }

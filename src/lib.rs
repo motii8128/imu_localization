@@ -153,3 +153,21 @@ pub fn create_vector<T>(x:T, y:T, z:T)->na::Vector3<T>
         z
     )
 }
+
+pub fn euler_to_quaternion(euler:na::Vector3<f64>)->na::Vector4<f64>
+{
+    let sin_x = (euler.x/2.0).sin();
+    let sin_y = (euler.y/2.0).sin();
+    let sin_z = (euler.z/2.0).sin();
+
+    let cos_x = (euler.x/2.0).cos();
+    let cos_y = (euler.y/2.0).cos();
+    let cos_z = (euler.z/2.0).cos();
+
+    na::Vector4::<f64>::new(
+        sin_x*cos_y*cos_z - cos_x*sin_y*sin_z,
+        sin_x*cos_y*sin_z + cos_x*sin_y*cos_z,
+        -1.0*sin_x*sin_y*cos_z + cos_x*cos_y*sin_z,
+        sin_x*sin_y*sin_z + cos_x*cos_y*cos_z,
+    )
+}
