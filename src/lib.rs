@@ -1,6 +1,6 @@
 extern crate nalgebra as na;
 
-fn init_posture()->na::Vector3<f64>
+pub fn init_posture()->na::Vector3<f64>
 {
     na::Vector3::<f64>::new(
         0.0,
@@ -9,7 +9,7 @@ fn init_posture()->na::Vector3<f64>
     )
 }
 
-fn init_cov()->na::Matrix3<f64>
+pub fn init_cov()->na::Matrix3<f64>
 {
     na::Matrix3::<f64>::new(
         1.0, 0.0, 0.0,
@@ -18,7 +18,7 @@ fn init_cov()->na::Matrix3<f64>
     )
 }
 
-fn predict_posture(posture:na::Vector3<f64>, angular_velocity:na::Vector3<f64>, delta_time:f64)->na::Vector3<f64>
+pub fn predict_posture(posture:na::Vector3<f64>, angular_velocity:na::Vector3<f64>, delta_time:f64)->na::Vector3<f64>
 {
     let sin_x = (posture.x).sin();
     let cos_x = (posture.x).cos();
@@ -36,7 +36,7 @@ fn predict_posture(posture:na::Vector3<f64>, angular_velocity:na::Vector3<f64>, 
     ) 
 }
 
-fn observation_posture(obs:na::Vector3<f64>,acceleration:na::Vector3<f64>, geomagnetism:na::Vector3<f64>)->na::Vector3<f64>
+pub fn observation_posture(obs:na::Vector3<f64>,acceleration:na::Vector3<f64>, geomagnetism:na::Vector3<f64>)->na::Vector3<f64>
 {
     let sin_x = obs.x.sin();
     let sin_y = obs.y.sin();
@@ -54,7 +54,7 @@ fn observation_posture(obs:na::Vector3<f64>,acceleration:na::Vector3<f64>, geoma
     )
 }
 
-fn predict_noise(rate:f64)->na::Matrix3<f64>
+pub fn predict_noise(rate:f64)->na::Matrix3<f64>
 {
     let result = na::Matrix3::<f64>::new(
         1.0, 0.0, 0.0,
@@ -65,7 +65,7 @@ fn predict_noise(rate:f64)->na::Matrix3<f64>
     result * rate
 }
 
-fn observation_noise(rate:f64)->na::Matrix3<f64>
+pub fn observation_noise(rate:f64)->na::Matrix3<f64>
 {
     let result = na::Matrix3::<f64>::new(
         1.0, 0.0, 0.0,
@@ -76,7 +76,7 @@ fn observation_noise(rate:f64)->na::Matrix3<f64>
     result * rate
 }
 
-fn predict_jacob(posture:na::Vector3<f64>, angular_velocity:na::Vector3<f64>, delta_time:f64)->na::Matrix3<f64>
+pub fn predict_jacob(posture:na::Vector3<f64>, angular_velocity:na::Vector3<f64>, delta_time:f64)->na::Matrix3<f64>
 {
     let sin_x = (posture.x).sin();
     let sin_y = (posture.y).sin();
@@ -103,7 +103,7 @@ fn predict_jacob(posture:na::Vector3<f64>, angular_velocity:na::Vector3<f64>, de
     )
 }
 
-fn observation_jacob()->na::Matrix3<f64>
+pub fn observation_jacob()->na::Matrix3<f64>
 {
     na::Matrix3::<f64>::new(
         1.0, 0.0, 0.0,
@@ -112,19 +112,44 @@ fn observation_jacob()->na::Matrix3<f64>
     )
 }
 
-fn calc_predict_disp(disp:na::Matrix3<f64>, jacob:na::Matrix3<f64>, predict_noise:na::Matrix3<f64>)->na::Matrix3<f64>
+pub fn calc_predict_disp(disp:na::Matrix3<f64>, jacob:na::Matrix3<f64>, predict_noise:na::Matrix3<f64>)->na::Matrix3<f64>
 {
     jacob * disp * jacob.transpose() + predict_noise
 }
 
-fn calc_observation_disp(predict_disp:na::Matrix3<f64>, obs_jacob:na::Matrix3<f64>, obs_noise:na::Matrix3<f64>)->na::Matrix3<f64>
+pub fn calc_observation_disp(predict_disp:na::Matrix3<f64>, obs_jacob:na::Matrix3<f64>, obs_noise:na::Matrix3<f64>)->na::Matrix3<f64>
 {
     obs_jacob*predict_disp*obs_jacob.transpose() + obs_noise
 }
 
-fn calc_kalman_gain(predict_disp:na::Matrix3<f64>, obs_jacob:na::Matrix3<f64>, obs_disp:na::Matrix3<f64>)->na::Matrix3<f64>
+pub fn calc_kalman_gain(predict_disp:na::Matrix3<f64>, obs_jacob:na::Matrix3<f64>, obs_disp:na::Matrix3<f64>)->na::Matrix3<f64>
 {
     let tv_obs_disp = obs_disp.try_inverse().unwrap();
 
     predict_disp*obs_jacob.transpose()*tv_obs_disp
+}
+
+pub fn update_posture(predict_posture:na::Vector3<f64>, kalman_gain:na::Matrix3<f64>, obs_jacob:na::Matrix3<f64>, obs_posture:na::Vector3<f64>)->na::Vector3<f64>
+{
+    predict_posture + kalman_gain*(obs_posture - obs_jacob*predict_posture)
+}
+
+pub fn update_disp(kalman_gain:na::Matrix3<f64>, obs_jacob:na::Matrix3<f64>, predict_disp:na::Matrix3<f64>)->na::Matrix3<f64>
+{
+    let i = na::Matrix3::<f64>::new(
+        1.0, 0.0, 0.0,
+        0.0, 1.0, 0.0,
+        0.0, 0.0, 1.0
+    );
+
+    (i - kalman_gain*obs_jacob)*predict_disp
+}
+
+pub fn create_vector<T>(x:T, y:T, z:T)->na::Vector3<T>
+{
+    na::Vector3::<T>::new(
+        x,
+        y,
+        z
+    )
 }
