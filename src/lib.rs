@@ -53,3 +53,35 @@ fn observation_posture(obs:na::Vector3<f64>,acceleration:na::Vector3<f64>, geoma
         o_z,
     )
 }
+
+fn predict_noise(rate:f64)->na::Matrix3<f64>
+{
+    let result = na::Matrix3::<f64>::new(
+        1.0, 0.0, 0.0,
+        0.0, 1.0, 0.0,
+        0.0, 0.0, 1.0
+    );
+
+    result * rate
+}
+
+fn observation_noise(rate:f64)->na::Matrix3<f64>
+{
+    let result = na::Matrix3::<f64>::new(
+        1.0, 0.0, 0.0,
+        0.0, 1.0, 0.0,
+        0.0, 0.0, 1.0
+    );
+
+    result * rate
+}
+
+fn predict_jacob(posture:na::Vector3<f64>, angular_velocity:na::Vector3<f64>, delta_time:f64)->na::Matrix3<f64>
+{
+    let sin_x = (posture.x).sin();
+    let cos_x = (posture.x).cos();
+    let cos_y = (posture.y).cos();
+    let tan_y = (posture.y).tan();
+
+    let x_x = 1.0 + (angular_velocity.x + angular_velocity.y)
+}
