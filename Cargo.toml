@@ -7,7 +7,13 @@ edition = "2021"
 
 [dependencies]
 safe_drive = "0.3.5"
-rust_robo_utils = {git = "https://github.com/motii8128/rust_robo_utils"}
+nalgebra = "0.32.3"
+
+haya_imu_msgs = {path = "./.msg/haya_imu_msgs"}
+geometry_msgs = {path = "./.msg/geometry_msgs"}
+std_msgs = {path = "./.msg/std_msgs"}
 
 [package.metadata.ros]
+msg = ["haya_imu_msgs", "geometry_msgs", "std_msgs"]
+msg_dir = "./.msg/"
 safe_drive_version = "0.3.5"
