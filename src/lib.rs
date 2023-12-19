@@ -83,5 +83,6 @@ fn predict_jacob(posture:na::Vector3<f64>, angular_velocity:na::Vector3<f64>, de
     let cos_y = (posture.y).cos();
     let tan_y = (posture.y).tan();
 
-    let x_x = 1.0 + (angular_velocity.x + angular_velocity.y)
+    let x_x = 1.0 + (angular_velocity.x + angular_velocity.y*tan_y*cos_x + angular_velocity.z*tan_y*sin_x)*delta_time;
+    let x_y = (angular_velocity.y*(sin_x/cos_y.powi(2)) + angular_velocity.z)*delta_time;
 }
